@@ -4,143 +4,87 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Controle de Empréstimos</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
   <style>
-    :root {
-      --bg:        #f0f4f8;
-      --surface:   #ffffff;
-      --border:    #e2e8f0;
-      --border2:   #f1f5f9;
-      --text:      #1e293b;
-      --subtext:   #64748b;
-      --muted:     #94a3b8;
-      --input-bg:  #ffffff;
-      --card-shadow: 0 1px 4px rgba(0,0,0,0.08);
-      --hover-shadow: 0 8px 30px rgba(31,78,120,0.13);
-    }
-    [data-theme="dark"] {
-      --bg:        #0f172a;
-      --surface:   #1e293b;
-      --border:    #334155;
-      --border2:   #1e293b;
-      --text:      #f1f5f9;
-      --subtext:   #94a3b8;
-      --muted:     #64748b;
-      --input-bg:  #0f172a;
-      --card-shadow: 0 1px 4px rgba(0,0,0,0.4);
-      --hover-shadow: 0 8px 30px rgba(0,0,0,0.4);
-    }
-    * { font-family:'Inter',sans-serif; box-sizing:border-box; }
-    body { background:var(--bg); color:var(--text); transition:background 0.3s,color 0.3s; min-height:100vh; }
+    :root{--bg:#f0f4f8;--surface:#fff;--border:#e2e8f0;--text:#1e293b;--sub:#64748b;--muted:#94a3b8;--inp:#fff;}
+    [data-theme=dark]{--bg:#0f172a;--surface:#1e293b;--border:#334155;--text:#f1f5f9;--sub:#94a3b8;--muted:#64748b;--inp:#0f172a;}
+    *{font-family:'Inter',sans-serif;box-sizing:border-box;}
+    body{background:var(--bg);color:var(--text);min-height:100vh;transition:background .3s,color .3s;}
+    .nav-btn{border-bottom:3px solid transparent;transition:all .2s;}
+    .nav-btn.active{border-bottom-color:#fff;color:#fff!important;font-weight:600;}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;transition:transform .18s,box-shadow .18s;}
+    .card:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.1);}
+    .field{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:9px 12px;font-size:14px;outline:none;background:var(--inp);color:var(--text);transition:border-color .2s;}
+    .field:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.12);}
+    [data-theme=dark] .field{color-scheme:dark;}
+    .badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+    .bg{background:#dcfce7;color:#15803d;} /* green */
+    [data-theme=dark] .bg{background:#14532d;color:#86efac;}
+    .ba{background:#fef3c7;color:#92400e;}
+    [data-theme=dark] .ba{background:#451a03;color:#fcd34d;}
+    .br{background:#fee2e2;color:#991b1b;}
+    [data-theme=dark] .br{background:#450a0a;color:#fca5a5;}
+    .bs{background:#f1f5f9;color:#475569;}
+    [data-theme=dark] .bs{background:#1e293b;color:#94a3b8;}
+    .bb{background:#dbeafe;color:#1e40af;}
+    [data-theme=dark] .bb{background:#1e3a5f;color:#93c5fd;}
+    .modal-back{backdrop-filter:blur(6px);background:rgba(0,0,0,.5);}
+    .modal-box{background:var(--surface);color:var(--text);}
+    .pb{transition:width .5s ease;} /* progress bar */
+    #toast{transition:opacity .3s,transform .3s;}
+    #toast.show{opacity:1;transform:translateY(0);}
+    #toast.hide{opacity:0;transform:translateY(10px);}
+    .empty{text-align:center;padding:40px 0;color:var(--muted);font-size:14px;}
+    .empty-icon{font-size:32px;margin-bottom:6px;}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+    .anim{animation:fadeUp .25s ease forwards;}
 
-    /* Nav */
-    .nav-btn { border-bottom:3px solid transparent; transition:all 0.2s; }
-    .nav-btn.active { border-bottom-color:#fff; color:#fff!important; font-weight:600; }
-
-    /* Cards */
-    .card { background:var(--surface); border:1px solid var(--border); box-shadow:var(--card-shadow); transition:transform 0.18s,box-shadow 0.18s; }
-    .card:hover { transform:translateY(-2px); box-shadow:var(--hover-shadow); }
-
-    /* Modals */
-    .modal-backdrop { backdrop-filter:blur(6px); background:rgba(0,0,0,0.5); }
-    .modal-box { background:var(--surface); color:var(--text); }
-
-    /* Inputs */
-    .field { width:100%; border:1.5px solid var(--border); border-radius:10px; padding:9px 12px; font-size:14px; outline:none; transition:border-color 0.2s,background 0.2s; background:var(--input-bg); color:var(--text); }
-    .field:focus { border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,0.15); }
-    [data-theme="dark"] .field { color-scheme: dark; }
-
-    /* Section labels */
-    .sec-label { color:var(--muted); font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; }
-    .sec-text  { color:var(--subtext); font-size:13px; }
-    .sec-head  { color:var(--text); font-weight:600; }
-
-    /* Badges */
-    .badge { display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600; }
-    .badge-green  { background:#dcfce7;color:#15803d; }
-    .badge-amber  { background:#fef3c7;color:#92400e; }
-    .badge-red    { background:#fee2e2;color:#991b1b; }
-    .badge-slate  { background:#f1f5f9;color:#475569; }
-    .badge-blue   { background:#dbeafe;color:#1e40af; }
-    [data-theme="dark"] .badge-green  { background:#14532d;color:#86efac; }
-    [data-theme="dark"] .badge-amber  { background:#451a03;color:#fcd34d; }
-    [data-theme="dark"] .badge-red    { background:#450a0a;color:#fca5a5; }
-    [data-theme="dark"] .badge-slate  { background:#1e293b;color:#94a3b8; }
-    [data-theme="dark"] .badge-blue   { background:#1e3a5f;color:#93c5fd; }
-
-    /* Progress */
-    .progress-bar { transition:width 0.6s ease; }
-    .progress-track { background:var(--border); }
-
-    /* Toast */
-    #toast { transition:opacity 0.3s,transform 0.3s; }
-    #toast.show { opacity:1; transform:translateY(0); }
-    #toast.hide { opacity:0; transform:translateY(12px); }
-
-    /* Scrollbar */
-    ::-webkit-scrollbar { width:5px; height:5px; }
-    ::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:10px; }
-
-    /* Empty */
-    .empty { text-align:center;padding:48px 0;color:var(--muted);font-size:14px; }
-    .empty-icon { font-size:36px;margin-bottom:8px; }
-
-    @keyframes slideUp { from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);} }
-    .animate-in { animation:slideUp 0.28s ease forwards; }
-
-    /* Info blocks inside cards */
-    .info-block { background:var(--bg); border-radius:12px; padding:10px; text-align:center; }
-    [data-theme="dark"] .info-block-amber { background:#2d1a00; }
-    [data-theme="dark"] .info-block-blue  { background:#0d1f3c; }
-    [data-theme="dark"] .info-block-green { background:#052e16; }
-    [data-theme="dark"] .info-block-red   { background:#2d0505; }
+    /* Month planner nav */
+    .month-nav{display:flex;align-items:center;justify-content:space-between;background:var(--bg);border-radius:14px;padding:10px 16px;margin-bottom:16px;}
+    .month-nav button{width:36px;height:36px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .2s;}
+    .month-nav button:hover{background:var(--border);}
+    .month-nav h3{font-size:16px;font-weight:700;color:var(--text);}
   </style>
 </head>
 <body>
-
 <script>
-const firebaseConfig = {
-  apiKey:            "AIzaSyAgjxB0PdtQsPqxBlHwrw8hQAfsOvmzUv0",
-  authDomain:        "emprecon-453a7.firebaseapp.com",
-  projectId:         "emprecon-453a7",
-  storageBucket:     "emprecon-453a7.firebasestorage.app",
-  messagingSenderId: "330022069434",
-  appId:             "1:330022069434:web:a43a3bdb76047024d78e83"
+const firebaseConfig={
+  apiKey:"AIzaSyAgjxB0PdtQsPqxBlHwrw8hQAfsOvmzUv0",
+  authDomain:"emprecon-453a7.firebaseapp.com",
+  projectId:"emprecon-453a7",
+  storageBucket:"emprecon-453a7.firebasestorage.app",
+  messagingSenderId:"330022069434",
+  appId:"1:330022069434:web:a43a3bdb76047024d78e83"
 };
-let db = null, firebaseOk = false;
-try { firebase.initializeApp(firebaseConfig); db = firebase.firestore(); firebaseOk = true; }
-catch(e) { console.error(e); }
-
-// Apply saved theme immediately (before render)
-if (localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme','dark');
+let db=null,firebaseOk=false;
+try{firebase.initializeApp(firebaseConfig);db=firebase.firestore();firebaseOk=true;}catch(e){console.error(e);}
+if(localStorage.getItem('theme')==='dark')document.documentElement.setAttribute('data-theme','dark');
 </script>
 
 <!-- HEADER -->
-<header class="bg-[#1F4E78] text-white shadow-xl sticky top-0 z-40">
+<header class="bg-[#1F4E78] text-white sticky top-0 z-40 shadow-xl">
   <div class="max-w-5xl mx-auto px-4 pt-4 pb-0 flex items-center justify-between">
     <div class="flex items-center gap-3">
-      <div class="w-9 h-9 bg-white/15 rounded-xl flex items-center justify-center text-lg">💰</div>
+      <div class="w-9 h-9 bg-white/15 rounded-xl flex items-center justify-center text-xl">💰</div>
       <div>
         <h1 class="text-lg font-bold leading-tight">Empréstimos</h1>
         <p class="text-blue-300 text-[11px]">Controle financeiro pessoal</p>
       </div>
     </div>
     <div class="flex items-center gap-2">
-      <!-- Dark mode toggle -->
-      <button onclick="toggleDark()" id="btn-dark"
-        class="w-9 h-9 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center text-lg transition"
-        title="Modo noturno">🌙</button>
-      <button onclick="openModal('modal-contrato')"
-        class="flex items-center gap-1.5 bg-white text-[#1F4E78] text-sm font-semibold px-4 py-2 rounded-xl hover:bg-blue-50 transition shadow-sm">
-        <span class="text-base leading-none">＋</span> Novo
+      <button onclick="toggleDark()" id="btn-dark" title="Modo noturno"
+        class="w-9 h-9 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center text-lg transition">🌙</button>
+      <button onclick="openModal('modal-c')"
+        class="bg-white text-[#1F4E78] font-semibold text-sm px-4 py-2 rounded-xl hover:bg-blue-50 transition shadow-sm flex items-center gap-1">
+        ＋ Novo
       </button>
     </div>
   </div>
-  <nav class="max-w-5xl mx-auto px-2 flex overflow-x-auto mt-2 gap-0">
-    <button onclick="showTab('dashboard')" id="tab-dashboard" class="nav-btn active px-4 py-3 text-blue-200 text-sm whitespace-nowrap hover:text-white">📊 Início</button>
+  <nav class="max-w-5xl mx-auto px-2 flex overflow-x-auto mt-2">
+    <button onclick="showTab('dash')"       id="tab-dash"       class="nav-btn active px-4 py-3 text-blue-200 text-sm whitespace-nowrap hover:text-white">📊 Início</button>
     <button onclick="showTab('contratos')"  id="tab-contratos"  class="nav-btn px-4 py-3 text-blue-200 text-sm whitespace-nowrap hover:text-white">📋 Contratos</button>
     <button onclick="showTab('parcelas')"   id="tab-parcelas"   class="nav-btn px-4 py-3 text-blue-200 text-sm whitespace-nowrap hover:text-white">📅 Parcelas</button>
     <button onclick="showTab('salario')"    id="tab-salario"    class="nav-btn px-4 py-3 text-blue-200 text-sm whitespace-nowrap hover:text-white">💵 Salário</button>
@@ -150,137 +94,172 @@ if (localStorage.getItem('theme') === 'dark') document.documentElement.setAttrib
 
 <main class="max-w-5xl mx-auto px-4 py-6">
 
-  <!-- ── DASHBOARD ── -->
-  <div id="page-dashboard">
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
-      <div class="card rounded-2xl p-4 animate-in">
-        <p class="sec-label">Dívida Total</p>
-        <p id="d-total" class="text-2xl font-extrabold text-blue-600 mt-1 leading-tight">R$ 0,00</p>
-        <p class="sec-text mt-0.5">saldo devedor</p>
-      </div>
-      <div class="card rounded-2xl p-4 animate-in" style="animation-delay:.05s">
-        <p class="sec-label">Desconto Este Mês</p>
-        <p id="d-mes" class="text-2xl font-extrabold text-amber-500 mt-1 leading-tight">R$ 0,00</p>
-        <p id="d-mes-label" class="sec-text mt-0.5">—</p>
-      </div>
-      <div class="card rounded-2xl p-4 animate-in" style="animation-delay:.1s">
-        <p class="sec-label">Em Aberto</p>
-        <p id="d-ativos" class="text-2xl font-extrabold text-blue-500 mt-1 leading-tight">0</p>
-        <p class="sec-text mt-0.5">contratos</p>
-      </div>
-      <div class="card rounded-2xl p-4 animate-in" style="animation-delay:.15s">
-        <p class="sec-label">Quitados</p>
-        <p id="d-quit" class="text-2xl font-extrabold text-green-500 mt-1 leading-tight">0</p>
-        <p class="sec-text mt-0.5">contratos</p>
-      </div>
+<!-- ══ DASHBOARD ══ -->
+<div id="page-dash">
+  <!-- Summary cards -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+    <div class="card p-4 anim">
+      <p class="text-[11px] uppercase tracking-wider" style="color:var(--muted)">Dívida Total</p>
+      <p id="d-total" class="text-2xl font-extrabold text-blue-600 mt-1">R$ 0,00</p>
+      <p class="text-xs mt-0.5" style="color:var(--muted)">saldo devedor</p>
     </div>
-    <div class="card rounded-2xl p-5">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="sec-head text-base">Parcelas deste mês</h2>
-        <span id="d-count-mes" class="badge badge-amber">0 parcelas</span>
-      </div>
-      <div id="d-lista-mes"><div class="empty"><div class="empty-icon">🎉</div>Nenhuma parcela este mês!</div></div>
+    <div class="card p-4 anim" style="animation-delay:.05s">
+      <p class="text-[11px] uppercase tracking-wider" style="color:var(--muted)">Desconto Este Mês</p>
+      <p id="d-mes-val" class="text-2xl font-extrabold text-amber-500 mt-1">R$ 0,00</p>
+      <p id="d-mes-label" class="text-xs mt-0.5" style="color:var(--muted)">—</p>
+    </div>
+    <div class="card p-4 anim" style="animation-delay:.1s">
+      <p class="text-[11px] uppercase tracking-wider" style="color:var(--muted)">Em Aberto</p>
+      <p id="d-ativos" class="text-2xl font-extrabold text-blue-500 mt-1">0</p>
+      <p class="text-xs mt-0.5" style="color:var(--muted)">contratos</p>
+    </div>
+    <div class="card p-4 anim" style="animation-delay:.15s">
+      <p class="text-[11px] uppercase tracking-wider" style="color:var(--muted)">Quitados</p>
+      <p id="d-quit" class="text-2xl font-extrabold text-green-500 mt-1">0</p>
+      <p class="text-xs mt-0.5" style="color:var(--muted)">contratos</p>
     </div>
   </div>
 
-  <!-- ── CONTRATOS ── -->
-  <div id="page-contratos" class="hidden">
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-lg font-semibold" style="color:var(--text)">Todos os contratos</h2>
-      <button onclick="openModal('modal-contrato')" class="bg-[#1F4E78] text-white text-sm px-4 py-2 rounded-xl hover:bg-blue-900 transition font-medium">＋ Novo</button>
-    </div>
-    <div id="lista-contratos"><div class="empty"><div class="empty-icon">📋</div>Nenhum contrato ainda.</div></div>
-  </div>
-
-  <!-- ── PARCELAS ── -->
-  <div id="page-parcelas" class="hidden">
-    <div class="card rounded-2xl p-5 mb-4">
-      <h2 class="sec-head text-base mb-3">🔍 Filtrar parcelas</h2>
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div><label class="sec-label block mb-1">Data inicial</label><input type="date" id="f-ini" class="field" onchange="renderParcelas()"/></div>
-        <div><label class="sec-label block mb-1">Data final</label><input type="date" id="f-fim" class="field" onchange="renderParcelas()"/></div>
-        <div><label class="sec-label block mb-1">Banco</label>
-          <select id="f-banco" class="field" onchange="renderParcelas()"><option value="">Todos</option></select></div>
-        <div><label class="sec-label block mb-1">Situação</label>
-          <select id="f-status" class="field" onchange="renderParcelas()">
-            <option value="">Todas</option><option value="PENDENTE">Pendente</option>
-            <option value="PAGA">Paga</option><option value="ANTECIPADA">Antecipada</option>
-          </select></div>
+  <!-- ── MONTHLY PLANNER ── -->
+  <div class="card p-5 anim" style="animation-delay:.2s">
+    <div class="month-nav">
+      <button onclick="mudaMes(-1)">‹</button>
+      <div class="text-center">
+        <h3 id="plan-titulo">—</h3>
+        <p class="text-xs mt-0.5" style="color:var(--muted)">Clique nas setas para navegar</p>
       </div>
-      <button onclick="limparFiltros()" class="mt-3 text-xs underline" style="color:var(--muted)">Limpar filtros</button>
-      <div class="mt-3 flex flex-wrap gap-3">
-        <div class="info-block flex-1 min-w-fit"><span class="sec-text">Parcelas: </span><span id="f-count" class="font-bold" style="color:var(--text)">0</span></div>
-        <div class="info-block flex-1 min-w-fit"><span class="sec-text">Valor pendente: </span><span id="f-total" class="font-bold text-blue-600">R$ 0,00</span></div>
+      <button onclick="mudaMes(1)">›</button>
+    </div>
+
+    <!-- totals row -->
+    <div class="grid grid-cols-3 gap-3 mb-4">
+      <div class="rounded-2xl p-3 text-center" style="background:#eff6ff">
+        <p class="text-[10px] font-semibold text-blue-500 uppercase tracking-wide">Parcelas</p>
+        <p id="plan-qtd" class="text-xl font-extrabold text-blue-700 mt-0.5">0</p>
+      </div>
+      <div class="rounded-2xl p-3 text-center" style="background:#fef3c7">
+        <p class="text-[10px] font-semibold text-amber-500 uppercase tracking-wide">Total a Descontar</p>
+        <p id="plan-total" class="text-xl font-extrabold text-amber-700 mt-0.5">R$ 0,00</p>
+      </div>
+      <div id="plan-sal-block" class="rounded-2xl p-3 text-center" style="background:#f0fdf4">
+        <p class="text-[10px] font-semibold text-green-500 uppercase tracking-wide">Salário Líquido</p>
+        <p id="plan-sal-liq" class="text-xl font-extrabold text-green-700 mt-0.5">—</p>
       </div>
     </div>
-    <div id="lista-parcelas"><div class="empty"><div class="empty-icon">📅</div>Nenhuma parcela encontrada.</div></div>
-  </div>
 
-  <!-- ── SALÁRIO ── -->
-  <div id="page-salario" class="hidden">
-    <div class="card rounded-2xl p-5 mb-5">
-      <h2 class="sec-head text-base mb-1">Adicionar previsão de salário</h2>
-      <p class="sec-text mb-4">Os descontos são calculados com base nas parcelas de cada mês.</p>
-      <div class="flex flex-col sm:flex-row gap-3">
-        <div class="flex-1"><label class="sec-label block mb-1">Mês de referência</label><input type="month" id="sal-mes" class="field"/></div>
-        <div class="flex-1"><label class="sec-label block mb-1">Salário previsto (R$)</label><input type="number" id="sal-val" step="0.01" placeholder="3500.00" class="field"/></div>
-        <div class="flex items-end"><button onclick="salvarSalario()" class="w-full sm:w-auto bg-[#1F4E78] text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-900 transition">Salvar</button></div>
+    <!-- parcelas list -->
+    <div id="plan-lista">
+      <div class="empty"><div class="empty-icon">📭</div>Nenhuma parcela neste mês.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CONTRATOS ══ -->
+<div id="page-contratos" class="hidden">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-lg font-semibold" style="color:var(--text)">Todos os contratos</h2>
+    <button onclick="openModal('modal-c')" class="bg-[#1F4E78] text-white text-sm px-4 py-2 rounded-xl hover:bg-blue-900 font-medium">＋ Novo</button>
+  </div>
+  <div id="lista-c"><div class="empty"><div class="empty-icon">📋</div>Nenhum contrato ainda.</div></div>
+</div>
+
+<!-- ══ PARCELAS ══ -->
+<div id="page-parcelas" class="hidden">
+  <div class="card p-5 mb-4">
+    <h2 class="font-semibold mb-3" style="color:var(--text)">🔍 Filtrar parcelas</h2>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div><label class="text-[11px] font-semibold uppercase tracking-wide block mb-1" style="color:var(--muted)">Data inicial</label>
+        <input type="date" id="f-ini" class="field" onchange="renderParcelas()"/></div>
+      <div><label class="text-[11px] font-semibold uppercase tracking-wide block mb-1" style="color:var(--muted)">Data final</label>
+        <input type="date" id="f-fim" class="field" onchange="renderParcelas()"/></div>
+      <div><label class="text-[11px] font-semibold uppercase tracking-wide block mb-1" style="color:var(--muted)">Banco</label>
+        <select id="f-banco" class="field" onchange="renderParcelas()"><option value="">Todos</option></select></div>
+      <div><label class="text-[11px] font-semibold uppercase tracking-wide block mb-1" style="color:var(--muted)">Situação</label>
+        <select id="f-status" class="field" onchange="renderParcelas()">
+          <option value="">Todas</option><option value="PENDENTE">Pendente</option>
+          <option value="PAGA">Paga</option><option value="ANTECIPADA">Antecipada</option>
+        </select></div>
+    </div>
+    <button onclick="limparFiltros()" class="mt-3 text-xs underline" style="color:var(--muted)">Limpar filtros</button>
+    <div class="mt-3 flex gap-3">
+      <div class="flex-1 rounded-xl p-2 text-sm text-center" style="background:var(--bg)">
+        <span style="color:var(--sub)">Parcelas: </span><span id="f-count" class="font-bold" style="color:var(--text)">0</span></div>
+      <div class="flex-1 rounded-xl p-2 text-sm text-center" style="background:var(--bg)">
+        <span style="color:var(--sub)">Pendente: </span><span id="f-total" class="font-bold text-blue-600">R$ 0,00</span></div>
+    </div>
+  </div>
+  <div id="lista-p"><div class="empty"><div class="empty-icon">📅</div>Nenhuma parcela encontrada.</div></div>
+</div>
+
+<!-- ══ SALÁRIO ══ -->
+<div id="page-salario" class="hidden">
+  <div class="card p-5 mb-5">
+    <h2 class="font-semibold mb-1" style="color:var(--text)">Adicionar previsão de salário</h2>
+    <p class="text-xs mb-4" style="color:var(--muted)">Os descontos são calculados com base nas parcelas de cada mês.</p>
+    <div class="flex flex-col sm:flex-row gap-3">
+      <div class="flex-1"><label class="text-[11px] font-semibold uppercase tracking-wide block mb-1" style="color:var(--muted)">Mês</label>
+        <input type="month" id="sal-mes" class="field"/></div>
+      <div class="flex-1"><label class="text-[11px] font-semibold uppercase tracking-wide block mb-1" style="color:var(--muted)">Salário previsto (R$)</label>
+        <input type="number" id="sal-val" step="0.01" placeholder="3500.00" class="field"/></div>
+      <div class="flex items-end">
+        <button onclick="salvarSalario()" class="w-full bg-[#1F4E78] text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-900">Salvar</button>
       </div>
     </div>
-    <div id="lista-salario"><div class="empty"><div class="empty-icon">💵</div>Nenhum registro ainda.</div></div>
   </div>
+  <div id="lista-sal"><div class="empty"><div class="empty-icon">💵</div>Nenhum registro ainda.</div></div>
+</div>
 
-  <!-- ── QUITADOS ── -->
-  <div id="page-quitados" class="hidden">
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-lg font-semibold" style="color:var(--text)">Contratos quitados</h2>
-      <span id="q-count" class="badge badge-green">0</span>
-    </div>
-    <div id="lista-quitados"><div class="empty"><div class="empty-icon">✅</div>Nenhum quitado ainda. 💪</div></div>
+<!-- ══ QUITADOS ══ -->
+<div id="page-quitados" class="hidden">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-lg font-semibold" style="color:var(--text)">Contratos quitados</h2>
+    <span id="q-count" class="badge bg">0</span>
   </div>
+  <div id="lista-q"><div class="empty"><div class="empty-icon">✅</div>Nenhum quitado ainda. 💪</div></div>
+</div>
 
 </main>
 
 <!-- ══ MODAL CONTRATO ══ -->
-<div id="modal-contrato" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
-  <div class="modal-backdrop absolute inset-0" onclick="closeModal('modal-contrato')"></div>
-  <div class="modal-box relative rounded-3xl shadow-2xl w-full max-w-lg max-h-[92vh] overflow-y-auto animate-in">
+<div id="modal-c" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+  <div class="modal-back absolute inset-0" onclick="closeModal('modal-c')"></div>
+  <div class="modal-box relative rounded-3xl shadow-2xl w-full max-w-lg max-h-[92vh] overflow-y-auto anim">
     <div class="bg-[#1F4E78] text-white p-5 rounded-t-3xl flex items-center justify-between sticky top-0 z-10">
-      <h2 class="font-bold text-base" id="modal-c-title">Novo Contrato</h2>
-      <button onclick="closeModal('modal-contrato')" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-lg">✕</button>
+      <h2 class="font-bold text-base" id="mc-title">Novo Contrato</h2>
+      <button onclick="closeModal('modal-c')" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-lg">✕</button>
     </div>
     <div class="p-5 space-y-4">
-      <input type="hidden" id="c-doc-id"/>
+      <input type="hidden" id="c-doc"/>
       <div class="grid grid-cols-2 gap-3">
-        <div><label class="sec-label block mb-1">ID do Contrato <span class="text-red-400">*</span></label><input id="c-id" type="text" placeholder="EMP-001" class="field"/></div>
-        <div><label class="sec-label block mb-1">Banco / Instituição <span class="text-red-400">*</span></label><input id="c-banco" type="text" placeholder="Caixa, Nubank…" class="field"/></div>
+        <div><label class="text-xs font-semibold block mb-1" style="color:var(--sub)">ID do Contrato *</label><input id="c-id" type="text" placeholder="EMP-001" class="field"/></div>
+        <div><label class="text-xs font-semibold block mb-1" style="color:var(--sub)">Banco / Instituição *</label><input id="c-banco" type="text" placeholder="Caixa, Nubank…" class="field"/></div>
       </div>
-      <div><label class="sec-label block mb-1">Descrição / Finalidade</label><input id="c-desc" type="text" placeholder="Ex: Reforma da casa" class="field"/></div>
+      <div><label class="text-xs font-semibold block mb-1" style="color:var(--sub)">Descrição / Finalidade</label><input id="c-desc" type="text" placeholder="Ex: Reforma da casa" class="field"/></div>
       <div class="grid grid-cols-2 gap-3">
-        <div><label class="sec-label block mb-1">Data de Aquisição <span class="text-red-400">*</span></label><input id="c-data" type="date" class="field"/></div>
+        <div><label class="text-xs font-semibold block mb-1" style="color:var(--sub)">Data de Aquisição *</label><input id="c-data" type="date" class="field"/></div>
         <div>
-          <label class="sec-label block mb-1">Data da 1ª Parcela <span class="text-red-400">*</span></label>
-          <input id="c-primeira" type="date" class="field"/>
+          <label class="text-xs font-semibold block mb-1" style="color:var(--sub)">Data da 1ª Parcela *</label>
+          <input id="c-prim" type="date" class="field"/>
           <p class="text-[11px] mt-1" style="color:var(--muted)">Quando venceu a 1ª cobrança</p>
         </div>
       </div>
       <div class="grid grid-cols-2 gap-3">
-        <div><label class="sec-label block mb-1">Valor Cheio (R$) <span class="text-red-400">*</span></label><input id="c-cheio" type="number" step="0.01" placeholder="15000.00" class="field"/></div>
-        <div><label class="sec-label block mb-1">Valor Financiado (R$) <span class="text-red-400">*</span></label><input id="c-fin" type="number" step="0.01" placeholder="15000.00" class="field" oninput="previewParcela()"/></div>
+        <div><label class="text-xs font-semibold block mb-1" style="color:var(--sub)">Valor Cheio (R$) *</label><input id="c-cheio" type="number" step="0.01" placeholder="15000.00" class="field"/></div>
+        <div><label class="text-xs font-semibold block mb-1" style="color:var(--sub)">Valor Financiado (R$) *</label><input id="c-fin" type="number" step="0.01" placeholder="15000.00" class="field" oninput="prevP()"/></div>
       </div>
       <div class="grid grid-cols-2 gap-3">
-        <div><label class="sec-label block mb-1">Nº de Parcelas <span class="text-red-400">*</span></label><input id="c-num" type="number" min="1" placeholder="24" class="field" oninput="previewParcela()"/></div>
-        <div><label class="sec-label block mb-1">Valor por Parcela</label>
-          <div id="c-parcela-preview" class="field bg-blue-50 border-blue-100 text-blue-700 font-bold text-center cursor-default">Automático</div></div>
+        <div><label class="text-xs font-semibold block mb-1" style="color:var(--sub)">Nº de Parcelas *</label><input id="c-num" type="number" min="1" placeholder="24" class="field" oninput="prevP()"/></div>
+        <div><label class="text-xs font-semibold block mb-1" style="color:var(--sub)">Valor por Parcela</label>
+          <div id="c-prev" class="field text-blue-600 font-bold text-center cursor-default" style="background:#eff6ff;border-color:#bfdbfe">Automático</div></div>
       </div>
       <div>
-        <label class="sec-label block mb-1">Parcelas já antecipadas</label>
+        <label class="text-xs font-semibold block mb-1" style="color:var(--sub)">Parcelas já antecipadas</label>
         <input id="c-ant" type="number" min="0" value="0" class="field"/>
         <p class="text-[11px] mt-1" style="color:var(--muted)">Digite 0 se não antecipou nenhuma</p>
       </div>
       <div class="flex gap-3 pt-2">
-        <button onclick="closeModal('modal-contrato')" class="flex-1 py-3 rounded-xl text-sm font-medium transition" style="border:2px solid var(--border);color:var(--subtext)">Cancelar</button>
-        <button onclick="salvarContrato()" class="flex-1 bg-[#1F4E78] text-white py-3 rounded-xl text-sm font-bold hover:bg-blue-900 transition shadow-md">Salvar Contrato</button>
+        <button onclick="closeModal('modal-c')" class="flex-1 py-3 rounded-xl text-sm font-medium" style="border:2px solid var(--border);color:var(--sub)">Cancelar</button>
+        <button onclick="salvarContrato()" class="flex-1 bg-[#1F4E78] text-white py-3 rounded-xl text-sm font-bold hover:bg-blue-900 shadow-md">Salvar Contrato</button>
       </div>
     </div>
   </div>
@@ -288,48 +267,44 @@ if (localStorage.getItem('theme') === 'dark') document.documentElement.setAttrib
 
 <!-- ══ MODAL ANTECIPAR ══ -->
 <div id="modal-ant" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
-  <div class="modal-backdrop absolute inset-0" onclick="closeModal('modal-ant')"></div>
-  <div class="modal-box relative rounded-3xl shadow-2xl w-full max-w-sm animate-in">
+  <div class="modal-back absolute inset-0" onclick="closeModal('modal-ant')"></div>
+  <div class="modal-box relative rounded-3xl shadow-2xl w-full max-w-sm anim">
     <div class="bg-amber-500 text-white p-5 rounded-t-3xl">
-      <h2 class="font-bold text-base">⚡ Antecipar Parcelas</h2>
+      <h2 class="font-bold">⚡ Antecipar Parcelas</h2>
       <p id="ant-info" class="text-amber-100 text-xs mt-1"></p>
     </div>
     <div class="p-5 space-y-4">
       <input type="hidden" id="ant-id"/>
       <div>
-        <label class="sec-label block mb-1">Total de parcelas antecipadas</label>
+        <label class="text-xs font-semibold block mb-1" style="color:var(--sub)">Total de parcelas antecipadas</label>
         <input id="ant-val" type="number" min="0" placeholder="0" class="field text-center text-xl font-bold"/>
-        <p class="text-xs mt-2 leading-relaxed" style="color:var(--subtext)">Informe o <strong>número total</strong> já antecipadas.<br>Ex: tinha 2, antecipou mais 3 → coloque <strong>5</strong>.</p>
+        <p class="text-xs mt-2" style="color:var(--sub)">Informe o total acumulado. Ex: tinha 2, antecipou 3 a mais → coloque <strong>5</strong>.</p>
       </div>
       <div class="flex gap-3">
-        <button onclick="closeModal('modal-ant')" class="flex-1 py-2.5 rounded-xl text-sm font-medium" style="border:2px solid var(--border);color:var(--subtext)">Cancelar</button>
-        <button onclick="confirmarAntecipacao()" class="flex-1 bg-amber-500 text-white py-2.5 rounded-xl text-sm font-bold hover:bg-amber-600">Confirmar</button>
+        <button onclick="closeModal('modal-ant')" class="flex-1 py-2.5 rounded-xl text-sm font-medium" style="border:2px solid var(--border);color:var(--sub)">Cancelar</button>
+        <button onclick="confAnt()" class="flex-1 bg-amber-500 text-white py-2.5 rounded-xl text-sm font-bold hover:bg-amber-600">Confirmar</button>
       </div>
     </div>
   </div>
 </div>
 
 <!-- ══ MODAL EDITAR SALÁRIO ══ -->
-<div id="modal-sal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
-  <div class="modal-backdrop absolute inset-0" onclick="closeModal('modal-sal')"></div>
-  <div class="modal-box relative rounded-3xl shadow-2xl w-full max-w-sm animate-in">
+<div id="modal-sal-ed" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+  <div class="modal-back absolute inset-0" onclick="closeModal('modal-sal-ed')"></div>
+  <div class="modal-box relative rounded-3xl shadow-2xl w-full max-w-sm anim">
     <div class="bg-[#1F4E78] text-white p-5 rounded-t-3xl flex items-center justify-between">
-      <h2 class="font-bold text-base">✏️ Editar Salário</h2>
-      <button onclick="closeModal('modal-sal')" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-lg">✕</button>
+      <h2 class="font-bold">✏️ Editar Salário</h2>
+      <button onclick="closeModal('modal-sal-ed')" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-lg">✕</button>
     </div>
     <div class="p-5 space-y-4">
-      <input type="hidden" id="sal-edit-id"/>
-      <div>
-        <label class="sec-label block mb-1">Mês de referência</label>
-        <input type="month" id="sal-edit-mes" class="field" readonly style="opacity:.6;cursor:not-allowed"/>
-      </div>
-      <div>
-        <label class="sec-label block mb-1">Salário previsto (R$)</label>
-        <input type="number" id="sal-edit-val" step="0.01" class="field"/>
-      </div>
+      <input type="hidden" id="se-id"/>
+      <div><label class="text-xs font-semibold block mb-1" style="color:var(--sub)">Mês</label>
+        <input type="month" id="se-mes" class="field" style="opacity:.6;cursor:not-allowed" readonly/></div>
+      <div><label class="text-xs font-semibold block mb-1" style="color:var(--sub)">Salário previsto (R$)</label>
+        <input type="number" id="se-val" step="0.01" class="field"/></div>
       <div class="flex gap-3">
-        <button onclick="closeModal('modal-sal')" class="flex-1 py-2.5 rounded-xl text-sm font-medium" style="border:2px solid var(--border);color:var(--subtext)">Cancelar</button>
-        <button onclick="confirmarEditSalario()" class="flex-1 bg-[#1F4E78] text-white py-2.5 rounded-xl text-sm font-bold hover:bg-blue-900">Salvar</button>
+        <button onclick="closeModal('modal-sal-ed')" class="flex-1 py-2.5 rounded-xl text-sm font-medium" style="border:2px solid var(--border);color:var(--sub)">Cancelar</button>
+        <button onclick="confEditSal()" class="flex-1 bg-[#1F4E78] text-white py-2.5 rounded-xl text-sm font-bold hover:bg-blue-900">Salvar</button>
       </div>
     </div>
   </div>
@@ -337,525 +312,544 @@ if (localStorage.getItem('theme') === 'dark') document.documentElement.setAttrib
 
 <!-- TOAST -->
 <div id="toast" class="fixed bottom-6 right-6 z-[100] pointer-events-none hide">
-  <div class="bg-gray-900 text-white px-5 py-3 rounded-2xl shadow-2xl text-sm font-medium flex items-center gap-2.5">
-    <span id="toast-icon" class="text-base">✅</span><span id="toast-msg">Mensagem</span>
+  <div class="bg-gray-900 text-white px-5 py-3 rounded-2xl shadow-2xl text-sm font-medium flex items-center gap-2">
+    <span id="t-icon">✅</span><span id="t-msg">ok</span>
   </div>
 </div>
 
 <script>
-// ════════════════════════════════════
+// ══════════════════════════════════
 // STATE
-// ════════════════════════════════════
-let contratos = [], salarios = [];
+// ══════════════════════════════════
+let contratos=[], salarios=[];
+// plannerMes: {ano, mes} (mes = 0-indexed, JS style)
+const hoje = new Date();
+let plannerMes = { ano: hoje.getFullYear(), mes: hoje.getMonth() };
 
-// ════════════════════════════════════
+// ══════════════════════════════════
 // FIREBASE
-// ════════════════════════════════════
-function initApp() {
-  if (!firebaseOk) { toast('Firebase não configurado','❌'); return; }
-  db.collection('contratos').orderBy('createdAt','desc').onSnapshot(snap => {
-    contratos = snap.docs.map(d => ({ _id:d.id, ...d.data() }));
+// ══════════════════════════════════
+function initApp(){
+  if(!firebaseOk){toast('Firebase não configurado','❌');return;}
+  db.collection('contratos').orderBy('createdAt','desc').onSnapshot(snap=>{
+    contratos=snap.docs.map(d=>({_id:d.id,...d.data()}));
     renderAll();
-  }, err => toast('Erro Firebase: '+err.message,'❌'));
-  db.collection('salarios').orderBy('mesAno','desc').onSnapshot(snap => {
-    salarios = snap.docs.map(d => ({ _id:d.id, ...d.data() }));
+  },e=>toast('Erro: '+e.message,'❌'));
+  db.collection('salarios').orderBy('mesAno','desc').onSnapshot(snap=>{
+    salarios=snap.docs.map(d=>({_id:d.id,...d.data()}));
     renderSalario();
-  }, err => console.error(err));
+    renderPlanner();
+  });
 }
 
-// ════════════════════════════════════
+// ══════════════════════════════════
 // DARK MODE
-// ════════════════════════════════════
-function toggleDark() {
-  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-  const next = isDark ? 'light' : 'dark';
-  document.documentElement.setAttribute('data-theme', next);
-  localStorage.setItem('theme', next);
-  document.getElementById('btn-dark').textContent = next === 'dark' ? '☀️' : '🌙';
+// ══════════════════════════════════
+function toggleDark(){
+  const d=document.documentElement.getAttribute('data-theme')==='dark';
+  const n=d?'light':'dark';
+  document.documentElement.setAttribute('data-theme',n);
+  localStorage.setItem('theme',n);
+  document.getElementById('btn-dark').textContent=n==='dark'?'☀️':'🌙';
 }
-// Set correct icon on load
-document.addEventListener('DOMContentLoaded', () => {
-  if (localStorage.getItem('theme') === 'dark')
-    document.getElementById('btn-dark').textContent = '☀️';
+document.addEventListener('DOMContentLoaded',()=>{
+  if(localStorage.getItem('theme')==='dark')document.getElementById('btn-dark').textContent='☀️';
 });
 
-// ════════════════════════════════════
-// DATE HELPERS
-// ════════════════════════════════════
-function toDate(v) {
-  if (!v) return null;
-  if (v.toDate) return v.toDate();
-  if (v instanceof Date) return v;
+// ══════════════════════════════════
+// DATE UTILS
+// ══════════════════════════════════
+function toDate(v){
+  if(!v)return null;
+  if(v&&v.toDate)return v.toDate();
+  if(v instanceof Date)return v;
   return new Date(v);
 }
+const brl=v=>(parseFloat(v)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const dtBR=v=>{const d=toDate(v);return d?d.toLocaleDateString('pt-BR'):'—';};
+const dtISO=v=>{const d=toDate(v);return d?d.toISOString().split('T')[0]:'';};
+const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
-// ════════════════════════════════════
-// CORE CALCULATION
-// Supports both old (dataAquisicao+diaDesconto) and
-// new (dataPrimeiraParcela) contracts
-// ════════════════════════════════════
-function getPrimeiraParcela(c) {
-  // New field takes priority
-  if (c.dataPrimeiraParcela) return toDate(c.dataPrimeiraParcela);
-  // Fallback: old field
-  const base = toDate(c.dataAquisicao);
-  if (!base) return null;
-  const dia = parseInt(c.diaDesconto) || base.getDate();
-  // First payment is the month after acquisition (or same month if day hasn't passed)
-  let primeira = new Date(base.getFullYear(), base.getMonth(), dia);
-  if (primeira < base) primeira = new Date(base.getFullYear(), base.getMonth()+1, dia);
-  return primeira;
+// ══════════════════════════════════
+// CORE: get 1ª parcela date
+// Suporta campo novo (dataPrimeiraParcela) e antigo (diaDesconto)
+// ══════════════════════════════════
+function getPrimeira(c){
+  // campo novo
+  const nova=toDate(c.dataPrimeiraParcela);
+  if(nova && nova.getFullYear()>2000) return nova;
+  // fallback campo antigo
+  const base=toDate(c.dataAquisicao);
+  if(!base) return null;
+  const dia=parseInt(c.diaDesconto)||base.getDate();
+  // valida: se parseInt retornou >31 ou NaN (ex: data completa guardada por bug antigo), usa dia da aquisição
+  const diaFinal=(isNaN(dia)||dia<1||dia>31)?base.getDate():dia;
+  let d=new Date(base.getFullYear(),base.getMonth(),diaFinal);
+  if(d<base) d=new Date(base.getFullYear(),base.getMonth()+1,diaFinal);
+  return d;
 }
 
-function parcelasDeContrato(c) {
-  const primeira = getPrimeiraParcela(c);
-  if (!primeira || !c.numParcelas) return [];
-  const hoje = new Date(); hoje.setHours(23,59,59,999);
-  const dia = primeira.getDate();
-  const ant = parseInt(c.parcelasAntecipadas)||0;
-  const out = [];
-  for (let i = 0; i < c.numParcelas; i++) {
-    const venc = new Date(primeira.getFullYear(), primeira.getMonth()+i, dia);
-    const num = i+1;
-    const situacao = num<=ant ? 'ANTECIPADA' : venc<=hoje ? 'PAGA' : 'PENDENTE';
-    out.push({ num, venc, valor: parseFloat(c.valorParcela)||0, situacao, c });
+// ══════════════════════════════════
+// CORE: gera parcelas de um contrato
+// ══════════════════════════════════
+function getParcelas(c){
+  const prim=getPrimeira(c);
+  if(!prim||!c.numParcelas) return [];
+  const n=parseInt(c.numParcelas);
+  const ant=parseInt(c.parcelasAntecipadas)||0;
+  const vp=parseFloat(c.valorParcela)||0;
+  const dia=prim.getDate();
+  const agora=new Date(); agora.setHours(23,59,59,999);
+  const out=[];
+  for(let i=0;i<n;i++){
+    const venc=new Date(prim.getFullYear(),prim.getMonth()+i,dia);
+    const num=i+1;
+    const sit=num<=ant?'ANTECIPADA':venc<=agora?'PAGA':'PENDENTE';
+    out.push({num,venc,valor:vp,sit,c});
   }
   return out;
 }
 
-function pagasAuto(c) {
-  const primeira = getPrimeiraParcela(c);
-  if (!primeira || !c.numParcelas) return 0;
-  const hoje = new Date(); hoje.setHours(23,59,59,999);
-  const dia = primeira.getDate();
-  let count = 0;
-  for (let i = 0; i < c.numParcelas; i++) {
-    if (new Date(primeira.getFullYear(), primeira.getMonth()+i, dia) <= hoje) count++;
-    else break;
-  }
-  return count;
-}
-
-function statusContrato(c) {
-  const n = parseInt(c.numParcelas)||0;
-  if (!n) return 'NÃO INICIADO';
-  const total = Math.min(n, (parseInt(c.parcelasAntecipadas)||0) + pagasAuto(c));
-  if (total >= n) return 'QUITADO';
-  if (total === 0) return 'NÃO INICIADO';
-  return 'EM ABERTO';
-}
-
-function saldoDevedor(c) {
-  const n = parseInt(c.numParcelas)||0;
-  const total = Math.min(n, (parseInt(c.parcelasAntecipadas)||0) + pagasAuto(c));
-  return Math.max(0, (parseFloat(c.valorFinanciado)||0) - total*(parseFloat(c.valorParcela)||0));
-}
-
-// Retorna todas as parcelas de um determinado mês/ano
-function parcelasDeMes(ano, mes) {
-  // mes = 0-indexed (JavaScript getMonth)
-  let todas = [];
-  contratos.forEach(c => {
-    parcelasDeContrato(c).forEach(p => {
-      if (p.venc.getFullYear()===ano && p.venc.getMonth()===mes && p.situacao!=='ANTECIPADA')
-        todas.push(p);
+// ══════════════════════════════════
+// Parcelas de um mês específico
+// ano/mes: getFullYear / getMonth (0-indexed)
+// ══════════════════════════════════
+function parcelasMes(ano,mes){
+  const out=[];
+  contratos.forEach(c=>{
+    getParcelas(c).forEach(p=>{
+      if(p.venc.getFullYear()===ano && p.venc.getMonth()===mes && p.sit!=='ANTECIPADA')
+        out.push(p);
     });
   });
-  return todas;
+  return out;
 }
 
-// ════════════════════════════════════
-// FORMAT
-// ════════════════════════════════════
-const brl   = v => (parseFloat(v)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-const dtBR  = v => { const d=toDate(v); return d?d.toLocaleDateString('pt-BR'):'—'; };
-const dtISO = v => { const d=toDate(v); return d?d.toISOString().split('T')[0]:''; };
-const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+// ══════════════════════════════════
+// STATUS / SALDO
+// ══════════════════════════════════
+function pagasAuto(c){
+  const prim=getPrimeira(c);
+  if(!prim||!c.numParcelas)return 0;
+  const n=parseInt(c.numParcelas);
+  const dia=prim.getDate();
+  const agora=new Date();agora.setHours(23,59,59,999);
+  let ct=0;
+  for(let i=0;i<n;i++){
+    if(new Date(prim.getFullYear(),prim.getMonth()+i,dia)<=agora)ct++;
+    else break;
+  }
+  return ct;
+}
+function statusC(c){
+  const n=parseInt(c.numParcelas)||0;
+  if(!n)return'NÃO INICIADO';
+  const t=Math.min(n,(parseInt(c.parcelasAntecipadas)||0)+pagasAuto(c));
+  if(t>=n)return'QUITADO';
+  if(t===0)return'NÃO INICIADO';
+  return'EM ABERTO';
+}
+function saldo(c){
+  const n=parseInt(c.numParcelas)||0;
+  const t=Math.min(n,(parseInt(c.parcelasAntecipadas)||0)+pagasAuto(c));
+  return Math.max(0,(parseFloat(c.valorFinanciado)||0)-t*(parseFloat(c.valorParcela)||0));
+}
 
-// ════════════════════════════════════
+// ══════════════════════════════════
 // RENDER ALL
-// ════════════════════════════════════
-function renderAll() {
-  renderDashboard();
+// ══════════════════════════════════
+function renderAll(){
+  renderDash();
   renderContratos();
   renderParcelas();
   renderQuitados();
-  populateBancoSelect();
+  fillBancoSelect();
 }
 
 // ── DASHBOARD ──
-function renderDashboard() {
-  const ativos   = contratos.filter(c => statusContrato(c) !== 'QUITADO');
-  const quitados = contratos.filter(c => statusContrato(c) === 'QUITADO');
-  const divida   = ativos.reduce((s,c) => s+saldoDevedor(c), 0);
+function renderDash(){
+  const ativos=contratos.filter(c=>statusC(c)!=='QUITADO');
+  const quit=contratos.filter(c=>statusC(c)==='QUITADO');
+  document.getElementById('d-total').textContent=brl(ativos.reduce((s,c)=>s+saldo(c),0));
+  document.getElementById('d-ativos').textContent=ativos.length;
+  document.getElementById('d-quit').textContent=quit.length;
 
-  const hoje = new Date();
-  const mes = hoje.getMonth(), ano = hoje.getFullYear();
-  document.getElementById('d-mes-label').textContent = `${MESES[mes]}/${ano}`;
-  document.getElementById('d-total').textContent  = brl(divida);
-  document.getElementById('d-ativos').textContent = ativos.length;
-  document.getElementById('d-quit').textContent   = quitados.length;
+  // "Este mês" = mês atual do planner (começa no mês atual)
+  const h=new Date();
+  document.getElementById('d-mes-label').textContent=`${MESES[h.getMonth()]}/${h.getFullYear()}`;
+  const pm=parcelasMes(h.getFullYear(),h.getMonth());
+  document.getElementById('d-mes-val').textContent=brl(pm.reduce((s,p)=>s+p.valor,0));
 
-  const parcelasMes = parcelasDeMes(ano, mes);
-  const totalMes = parcelasMes.reduce((s,p) => s+p.valor, 0);
-  document.getElementById('d-mes').textContent       = brl(totalMes);
-  document.getElementById('d-count-mes').textContent = `${parcelasMes.length} parcela${parcelasMes.length!==1?'s':''}`;
+  renderPlanner();
+}
 
-  const el = document.getElementById('d-lista-mes');
-  if (!parcelasMes.length) {
-    el.innerHTML = '<div class="empty"><div class="empty-icon">🎉</div>Nenhuma parcela este mês!</div>'; return;
+// ── MONTHLY PLANNER ──
+function mudaMes(delta){
+  plannerMes.mes+=delta;
+  if(plannerMes.mes>11){plannerMes.mes=0;plannerMes.ano++;}
+  if(plannerMes.mes<0){plannerMes.mes=11;plannerMes.ano--;}
+  renderPlanner();
+}
+
+function renderPlanner(){
+  const {ano,mes}=plannerMes;
+  document.getElementById('plan-titulo').textContent=`${MESES[mes]} ${ano}`;
+
+  const ps=parcelasMes(ano,mes);
+  const total=ps.reduce((s,p)=>s+p.valor,0);
+  document.getElementById('plan-qtd').textContent=ps.length;
+  document.getElementById('plan-total').textContent=brl(total);
+
+  // Salário do mês
+  const key=`${ano}-${String(mes+1).padStart(2,'0')}`;
+  const salObj=salarios.find(s=>s.mesAno===key);
+  const liqEl=document.getElementById('plan-sal-liq');
+  const blEl=document.getElementById('plan-sal-block');
+  if(salObj){
+    const liq=(parseFloat(salObj.previsao)||0)-total;
+    liqEl.textContent=brl(liq);
+    liqEl.className=`text-xl font-extrabold mt-0.5 ${liq<0?'text-red-600':'text-green-700'}`;
+    blEl.style.background=liq<0?'#fef2f2':'#f0fdf4';
+  } else {
+    liqEl.textContent='—';
+    liqEl.className='text-xl font-extrabold text-green-700 mt-0.5';
+    blEl.style.background='#f0fdf4';
   }
-  el.innerHTML = parcelasMes.map(p => `
-    <div class="flex items-center justify-between py-3 px-4 rounded-xl border mb-2
-      ${p.situacao==='PAGA'
-        ? 'border-green-200 bg-green-50'
-        : 'border-amber-200 bg-amber-50'}
-      [data-theme=dark]:bg-opacity-20">
-      <div>
-        <p class="text-sm font-semibold" style="color:var(--text)">${p.c.banco}</p>
-        <p class="sec-text text-xs">${p.c.descricao||p.c.idContrato||''} · Parcela ${p.num}/${p.c.numParcelas} · vence ${dtBR(p.venc)}</p>
+
+  const el=document.getElementById('plan-lista');
+  if(!ps.length){el.innerHTML='<div class="empty"><div class="empty-icon">📭</div>Nenhuma parcela neste mês.</div>';return;}
+
+  const sitBadge={PAGA:'bg',PENDENTE:'ba'};
+  const sitBg={PAGA:'#f0fdf4',PENDENTE:'#fffbeb'};
+  el.innerHTML=ps.map(p=>`
+    <div class="flex items-center justify-between px-4 py-3 rounded-xl mb-2 border"
+      style="background:${sitBg[p.sit]||'var(--surface)'};border-color:var(--border)">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold flex-shrink-0"
+          style="background:var(--bg);color:var(--sub)">${p.num}</div>
+        <div>
+          <p class="text-sm font-semibold" style="color:var(--text)">${p.c.banco}</p>
+          <p class="text-xs" style="color:var(--muted)">${p.c.descricao||p.c.idContrato||''} · Parcela ${p.num}/${p.c.numParcelas} · vence ${dtBR(p.venc)}</p>
+        </div>
       </div>
-      <div class="flex items-center gap-2 ml-3">
-        <span class="font-bold text-sm whitespace-nowrap ${p.situacao==='PAGA'?'text-green-700':'text-amber-700'}">${brl(p.valor)}</span>
-        <span class="badge ${p.situacao==='PAGA'?'badge-green':'badge-amber'}">${p.situacao}</span>
+      <div class="flex items-center gap-2 ml-2 flex-shrink-0">
+        <span class="font-bold text-sm" style="color:var(--text)">${brl(p.valor)}</span>
+        <span class="badge ${sitBadge[p.sit]||'bs'}">${p.sit}</span>
       </div>
     </div>`).join('');
 }
 
 // ── CONTRATOS ──
-function renderContratos() {
-  const el = document.getElementById('lista-contratos');
-  if (!contratos.length) { el.innerHTML='<div class="empty"><div class="empty-icon">📋</div>Nenhum contrato ainda.<br>Clique em "Novo" para começar.</div>'; return; }
-  el.innerHTML = contratos.map(c => {
-    const st = statusContrato(c);
-    const saldo = saldoDevedor(c);
-    const n = parseInt(c.numParcelas)||0;
-    const totalQuit = Math.min(n,(parseInt(c.parcelasAntecipadas)||0)+pagasAuto(c));
-    const pct = n>0 ? totalQuit/n*100 : 0;
-    const stMap = {'QUITADO':'badge-green','EM ABERTO':'badge-amber','NÃO INICIADO':'badge-slate'};
-    const prim = getPrimeiraParcela(c);
-    return `
-      <div class="card rounded-2xl p-5 mb-3 animate-in">
-        <div class="flex items-start justify-between mb-3">
-          <div class="flex-1 min-w-0">
-            <div class="flex flex-wrap items-center gap-2 mb-1">
-              <span class="text-xs font-mono" style="color:var(--muted)">${c.idContrato||''}</span>
-              <span class="badge ${stMap[st]||'badge-slate'}">${st}</span>
-            </div>
-            <h3 class="font-bold text-base" style="color:var(--text)">${c.banco||'—'}</h3>
-            <p class="sec-text text-xs mt-0.5">${c.descricao||''} ${prim?'· 1ª parcela: '+dtBR(prim):''}</p>
+function renderContratos(){
+  const el=document.getElementById('lista-c');
+  if(!contratos.length){el.innerHTML='<div class="empty"><div class="empty-icon">📋</div>Nenhum contrato ainda.</div>';return;}
+  el.innerHTML=contratos.map(c=>{
+    const st=statusC(c),sd=saldo(c);
+    const n=parseInt(c.numParcelas)||0;
+    const tq=Math.min(n,(parseInt(c.parcelasAntecipadas)||0)+pagasAuto(c));
+    const pct=n>0?tq/n*100:0;
+    const stBadge={'QUITADO':'bg','EM ABERTO':'ba','NÃO INICIADO':'bs'};
+    const prim=getPrimeira(c);
+    return`<div class="card p-5 mb-3 anim">
+      <div class="flex items-start justify-between mb-3">
+        <div class="flex-1 min-w-0">
+          <div class="flex flex-wrap items-center gap-2 mb-1">
+            <span class="text-xs font-mono" style="color:var(--muted)">${c.idContrato||''}</span>
+            <span class="badge ${stBadge[st]||'bs'}">${st}</span>
           </div>
-          <div class="text-right ml-3 flex-shrink-0">
-            <p class="sec-text text-xs">Saldo devedor</p>
-            <p class="font-extrabold text-blue-600 text-lg leading-tight">${brl(saldo)}</p>
-          </div>
+          <h3 class="font-bold text-base" style="color:var(--text)">${c.banco||'—'}</h3>
+          <p class="text-xs mt-0.5" style="color:var(--muted)">${c.descricao||''} ${prim?'· 1ª: '+dtBR(prim):''}</p>
         </div>
-        <div class="mb-3">
-          <div class="flex justify-between text-xs mb-1" style="color:var(--muted)">
-            <span>${totalQuit} de ${n} quitadas</span><span>${pct.toFixed(0)}%</span>
-          </div>
-          <div class="h-2 rounded-full overflow-hidden progress-track">
-            <div class="h-full rounded-full progress-bar ${st==='QUITADO'?'bg-green-500':'bg-blue-500'}" style="width:${pct}%"></div>
-          </div>
+        <div class="text-right ml-3 flex-shrink-0">
+          <p class="text-xs" style="color:var(--muted)">Saldo devedor</p>
+          <p class="font-extrabold text-blue-600 text-lg leading-tight">${brl(sd)}</p>
         </div>
-        <div class="grid grid-cols-3 gap-2 mb-3 text-center">
-          <div class="info-block"><p class="sec-label">Parcela</p><p class="text-sm font-bold mt-0.5" style="color:var(--text)">${brl(c.valorParcela)}</p></div>
-          <div class="info-block"><p class="sec-label">Total</p><p class="text-sm font-bold mt-0.5" style="color:var(--text)">${brl(c.valorFinanciado)}</p></div>
-          <div class="info-block info-block-amber"><p class="sec-label text-amber-500">Antecipadas</p><p class="text-sm font-bold text-amber-600 mt-0.5">${parseInt(c.parcelasAntecipadas)||0}</p></div>
+      </div>
+      <div class="mb-3">
+        <div class="flex justify-between text-xs mb-1" style="color:var(--muted)"><span>${tq} de ${n} quitadas</span><span>${pct.toFixed(0)}%</span></div>
+        <div class="h-2 rounded-full overflow-hidden" style="background:var(--border)">
+          <div class="h-full rounded-full pb ${st==='QUITADO'?'bg-green-500':'bg-blue-500'}" style="width:${pct}%"></div>
         </div>
-        <div class="flex gap-2">
-          <button onclick="abrirAntecipar('${c._id}')" class="flex-1 border-2 border-amber-200 text-amber-700 py-2 rounded-xl text-xs font-semibold hover:bg-amber-50 transition">⚡ Antecipar</button>
-          <button onclick="editarContrato('${c._id}')" class="flex-1 border-2 py-2 rounded-xl text-xs font-semibold transition" style="border-color:var(--border);color:var(--subtext)">✏️ Editar</button>
-          <button onclick="excluirContrato('${c._id}')" class="px-4 border-2 border-red-100 text-red-400 py-2 rounded-xl text-xs font-semibold hover:bg-red-50 transition">🗑️</button>
+      </div>
+      <div class="grid grid-cols-3 gap-2 mb-3 text-center">
+        <div class="rounded-xl p-2" style="background:var(--bg)">
+          <p class="text-[10px] uppercase tracking-wide" style="color:var(--muted)">Parcela</p>
+          <p class="text-sm font-bold mt-0.5" style="color:var(--text)">${brl(c.valorParcela)}</p>
         </div>
-      </div>`;
+        <div class="rounded-xl p-2" style="background:var(--bg)">
+          <p class="text-[10px] uppercase tracking-wide" style="color:var(--muted)">Total</p>
+          <p class="text-sm font-bold mt-0.5" style="color:var(--text)">${brl(c.valorFinanciado)}</p>
+        </div>
+        <div class="rounded-xl p-2" style="background:#fffbeb">
+          <p class="text-[10px] uppercase tracking-wide text-amber-500">Antecipadas</p>
+          <p class="text-sm font-bold mt-0.5 text-amber-600">${parseInt(c.parcelasAntecipadas)||0}</p>
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="abrirAnt('${c._id}')" class="flex-1 border-2 border-amber-200 text-amber-700 py-2 rounded-xl text-xs font-semibold hover:bg-amber-50">⚡ Antecipar</button>
+        <button onclick="editC('${c._id}')" class="flex-1 py-2 rounded-xl text-xs font-semibold" style="border:2px solid var(--border);color:var(--sub)">✏️ Editar</button>
+        <button onclick="delC('${c._id}')" class="px-4 border-2 border-red-100 text-red-400 py-2 rounded-xl text-xs font-semibold hover:bg-red-50">🗑️</button>
+      </div>
+    </div>`;
   }).join('');
 }
 
 // ── PARCELAS ──
-function renderParcelas() {
-  const ini = document.getElementById('f-ini').value;
-  const fim = document.getElementById('f-fim').value;
-  const banco = document.getElementById('f-banco').value;
-  const status = document.getElementById('f-status').value;
-  let all = [];
-  contratos.forEach(c => parcelasDeContrato(c).forEach(p => all.push(p)));
-  if (ini) { const d=new Date(ini+'T00:00:00'); all=all.filter(p=>p.venc>=d); }
-  if (fim) { const d=new Date(fim+'T23:59:59'); all=all.filter(p=>p.venc<=d); }
-  if (banco) all=all.filter(p=>p.c.banco===banco);
-  if (status) all=all.filter(p=>p.situacao===status);
+function renderParcelas(){
+  const ini=document.getElementById('f-ini').value;
+  const fim=document.getElementById('f-fim').value;
+  const banco=document.getElementById('f-banco').value;
+  const status=document.getElementById('f-status').value;
+  let all=[];
+  contratos.forEach(c=>getParcelas(c).forEach(p=>all.push(p)));
+  if(ini){const d=new Date(ini+'T00:00:00');all=all.filter(p=>p.venc>=d);}
+  if(fim){const d=new Date(fim+'T23:59:59');all=all.filter(p=>p.venc<=d);}
+  if(banco)all=all.filter(p=>p.c.banco===banco);
+  if(status)all=all.filter(p=>p.sit===status);
   all.sort((a,b)=>a.venc-b.venc);
-  document.getElementById('f-count').textContent = all.length;
-  document.getElementById('f-total').textContent = brl(all.filter(p=>p.situacao==='PENDENTE').reduce((s,p)=>s+p.valor,0));
-  const el = document.getElementById('lista-parcelas');
-  if (!all.length) { el.innerHTML='<div class="empty"><div class="empty-icon">🔍</div>Nenhuma parcela encontrada.</div>'; return; }
-  const badgeMap = {PAGA:'badge-green',ANTECIPADA:'badge-blue',PENDENTE:'badge-amber'};
-  el.innerHTML = all.map(p=>`
-    <div class="card flex items-center justify-between px-4 py-3 rounded-xl mb-2">
+  document.getElementById('f-count').textContent=all.length;
+  document.getElementById('f-total').textContent=brl(all.filter(p=>p.sit==='PENDENTE').reduce((s,p)=>s+p.valor,0));
+  const el=document.getElementById('lista-p');
+  if(!all.length){el.innerHTML='<div class="empty"><div class="empty-icon">🔍</div>Nenhuma parcela encontrada.</div>';return;}
+  const bm={PAGA:'bg',ANTECIPADA:'bb',PENDENTE:'ba'};
+  el.innerHTML=all.map(p=>`
+    <div class="card flex items-center justify-between px-4 py-3 mb-2">
       <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold flex-shrink-0" style="background:var(--bg);color:var(--subtext)">${p.num}</div>
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold flex-shrink-0" style="background:var(--bg);color:var(--sub)">${p.num}</div>
         <div>
           <p class="text-sm font-semibold" style="color:var(--text)">${p.c.banco}</p>
-          <p class="sec-text text-xs">${p.c.descricao||p.c.idContrato||''} · ${dtBR(p.venc)}</p>
+          <p class="text-xs" style="color:var(--muted)">${p.c.descricao||p.c.idContrato||''} · ${dtBR(p.venc)}</p>
         </div>
       </div>
-      <div class="flex items-center gap-3 ml-3">
-        <span class="font-bold text-sm whitespace-nowrap" style="color:var(--text)">${brl(p.valor)}</span>
-        <span class="badge ${badgeMap[p.situacao]||'badge-slate'} whitespace-nowrap">${p.situacao}</span>
+      <div class="flex items-center gap-2 ml-2 flex-shrink-0">
+        <span class="font-bold text-sm" style="color:var(--text)">${brl(p.valor)}</span>
+        <span class="badge ${bm[p.sit]||'bs'}">${p.sit}</span>
       </div>
     </div>`).join('');
 }
 
 // ── SALÁRIO ──
-function renderSalario() {
-  const el = document.getElementById('lista-salario');
-  if (!salarios.length) { el.innerHTML='<div class="empty"><div class="empty-icon">💵</div>Nenhum registro ainda.</div>'; return; }
-  el.innerHTML = salarios.map(s => {
-    const [ano, mes] = s.mesAno.split('-').map(Number);
-    // mes aqui é 1-indexed (ex: 7 = julho), getMonth() retorna 0-indexed (6 = julho)
-    const parcelasMes = parcelasDeMes(ano, mes-1);
-    const desc = parcelasMes.reduce((sum,p)=>sum+p.valor, 0);
-    const liquido = (parseFloat(s.previsao)||0) - desc;
-    const pct = s.previsao > 0 ? desc/s.previsao*100 : 0;
-    const alto = pct > 30;
-    const mesNome = new Date(ano, mes-1, 1).toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
-    const parcelasLista = parcelasMes.length > 0
-      ? `<div class="mt-3 space-y-1">${parcelasMes.map(p=>`
-          <div class="flex justify-between text-xs px-2 py-1 rounded-lg" style="background:var(--bg)">
-            <span style="color:var(--subtext)">${p.c.banco} · Parcela ${p.num}/${p.c.numParcelas}</span>
-            <span class="font-semibold" style="color:var(--text)">${brl(p.valor)}</span>
-          </div>`).join('')}</div>`
-      : `<p class="sec-text text-xs mt-3 text-center">Nenhuma parcela registrada para este mês</p>`;
-    return `
-      <div class="card rounded-2xl p-5 mb-3">
-        <div class="flex items-start justify-between mb-3">
-          <div>
-            <h3 class="font-bold capitalize" style="color:var(--text)">${mesNome}</h3>
-            <p class="sec-text text-xs mt-0.5">${parcelasMes.length} parcela${parcelasMes.length!==1?'s':''} neste mês</p>
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="badge ${alto?'badge-red':'badge-green'}">${pct.toFixed(0)}% ${alto?'⚠️':'✅'}</span>
-          </div>
+function renderSalario(){
+  const el=document.getElementById('lista-sal');
+  if(!salarios.length){el.innerHTML='<div class="empty"><div class="empty-icon">💵</div>Nenhum registro ainda.</div>';return;}
+  el.innerHTML=salarios.map(s=>{
+    const [ano,mes]=s.mesAno.split('-').map(Number);
+    const ps=parcelasMes(ano,mes-1);
+    const desc=ps.reduce((sum,p)=>sum+p.valor,0);
+    const liq=(parseFloat(s.previsao)||0)-desc;
+    const pct=s.previsao>0?desc/s.previsao*100:0;
+    const alto=pct>30;
+    const mn=new Date(ano,mes-1,1).toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+    const lista=ps.length?ps.map(p=>`
+      <div class="flex justify-between text-xs px-3 py-1.5 rounded-lg mb-1" style="background:var(--bg)">
+        <span style="color:var(--sub)">${p.c.banco} · ${p.c.descricao||p.c.idContrato||''} · P.${p.num}/${p.c.numParcelas}</span>
+        <span class="font-semibold" style="color:var(--text)">${brl(p.valor)}</span>
+      </div>`).join('')
+      :'<p class="text-xs text-center py-2" style="color:var(--muted)">Nenhuma parcela neste mês</p>';
+    return`<div class="card p-5 mb-3">
+      <div class="flex items-start justify-between mb-3">
+        <div>
+          <h3 class="font-bold capitalize" style="color:var(--text)">${mn}</h3>
+          <p class="text-xs mt-0.5" style="color:var(--muted)">${ps.length} parcela${ps.length!==1?'s':''}</p>
         </div>
-        <div class="grid grid-cols-3 gap-3 text-center mb-3">
-          <div class="info-block info-block-blue rounded-xl p-3">
-            <p class="sec-label text-blue-500">Salário</p>
-            <p class="text-base font-extrabold text-blue-600 mt-1">${brl(s.previsao)}</p>
-          </div>
-          <div class="info-block info-block-amber rounded-xl p-3">
-            <p class="sec-label text-amber-500">Descontos</p>
-            <p class="text-base font-extrabold text-amber-600 mt-1">${brl(desc)}</p>
-          </div>
-          <div class="info-block ${liquido<0?'info-block-red':'info-block-green'} rounded-xl p-3">
-            <p class="sec-label ${liquido<0?'text-red-500':'text-green-500'}">Líquido</p>
-            <p class="text-base font-extrabold ${liquido<0?'text-red-600':'text-green-600'} mt-1">${brl(liquido)}</p>
-          </div>
+        <span class="badge ${alto?'br':'bg'}">${pct.toFixed(0)}% ${alto?'⚠️':'✅'}</span>
+      </div>
+      <div class="grid grid-cols-3 gap-3 text-center mb-3">
+        <div class="rounded-2xl p-3" style="background:#eff6ff">
+          <p class="text-[10px] font-semibold text-blue-500 uppercase tracking-wide">Salário</p>
+          <p class="text-base font-extrabold text-blue-700 mt-0.5">${brl(s.previsao)}</p>
         </div>
-        ${parcelasLista}
-        <div class="flex gap-2 mt-3">
-          <button onclick="abrirEditSalario('${s._id}')"
-            class="flex-1 border-2 py-2 rounded-xl text-xs font-semibold transition" style="border-color:var(--border);color:var(--subtext)">
-            ✏️ Editar
-          </button>
-          <button onclick="excluirSalario('${s._id}')"
-            class="px-5 border-2 border-red-100 text-red-400 py-2 rounded-xl text-xs font-semibold hover:bg-red-50 transition">
-            🗑️ Apagar
-          </button>
+        <div class="rounded-2xl p-3" style="background:#fffbeb">
+          <p class="text-[10px] font-semibold text-amber-500 uppercase tracking-wide">Descontos</p>
+          <p class="text-base font-extrabold text-amber-700 mt-0.5">${brl(desc)}</p>
         </div>
-      </div>`;
+        <div class="rounded-2xl p-3" style="background:${liq<0?'#fef2f2':'#f0fdf4'}">
+          <p class="text-[10px] font-semibold uppercase tracking-wide ${liq<0?'text-red-500':'text-green-500'}">Líquido</p>
+          <p class="text-base font-extrabold mt-0.5 ${liq<0?'text-red-700':'text-green-700'}">${brl(liq)}</p>
+        </div>
+      </div>
+      <div class="mb-3">${lista}</div>
+      <div class="flex gap-2">
+        <button onclick="abrirEditSal('${s._id}')" class="flex-1 py-2 rounded-xl text-xs font-semibold" style="border:2px solid var(--border);color:var(--sub)">✏️ Editar</button>
+        <button onclick="delSal('${s._id}')" class="px-5 border-2 border-red-100 text-red-400 py-2 rounded-xl text-xs font-semibold hover:bg-red-50">🗑️ Apagar</button>
+      </div>
+    </div>`;
   }).join('');
 }
 
 // ── QUITADOS ──
-function renderQuitados() {
-  const q = contratos.filter(c => statusContrato(c)==='QUITADO');
-  document.getElementById('q-count').textContent = `${q.length} contrato${q.length!==1?'s':''}`;
-  const el = document.getElementById('lista-quitados');
-  if (!q.length) { el.innerHTML='<div class="empty"><div class="empty-icon">✅</div>Nenhum quitado ainda. 💪</div>'; return; }
-  el.innerHTML = q.map(c=>`
-    <div class="card rounded-2xl p-5 mb-3" style="border-color:#bbf7d0">
+function renderQuitados(){
+  const q=contratos.filter(c=>statusC(c)==='QUITADO');
+  document.getElementById('q-count').textContent=`${q.length} contrato${q.length!==1?'s':''}`;
+  const el=document.getElementById('lista-q');
+  if(!q.length){el.innerHTML='<div class="empty"><div class="empty-icon">✅</div>Nenhum quitado ainda. 💪</div>';return;}
+  el.innerHTML=q.map(c=>`
+    <div class="card p-5 mb-3" style="border-color:#bbf7d0">
       <div class="flex items-center justify-between">
         <div>
-          <div class="flex items-center gap-2 mb-1">
-            <span class="text-green-500 text-lg">✅</span>
-            <span class="text-xs font-mono" style="color:var(--muted)">${c.idContrato||''}</span>
-          </div>
+          <div class="flex items-center gap-2 mb-1"><span class="text-green-500">✅</span><span class="text-xs font-mono" style="color:var(--muted)">${c.idContrato||''}</span></div>
           <h3 class="font-bold" style="color:var(--text)">${c.banco||'—'}</h3>
-          <p class="sec-text text-xs">${c.descricao||''} · ${c.numParcelas||0} parcelas · 1ª: ${dtBR(c.dataPrimeiraParcela||c.dataAquisicao)}</p>
+          <p class="text-xs" style="color:var(--muted)">${c.descricao||''} · ${c.numParcelas||0} parcelas · 1ª: ${dtBR(c.dataPrimeiraParcela||c.dataAquisicao)}</p>
         </div>
         <div class="text-right ml-4">
-          <p class="sec-text text-xs">Total pago</p>
+          <p class="text-xs" style="color:var(--muted)">Total pago</p>
           <p class="font-extrabold text-green-600 text-lg">${brl(c.valorFinanciado)}</p>
         </div>
       </div>
     </div>`).join('');
 }
 
-function populateBancoSelect() {
-  const sel = document.getElementById('f-banco');
-  const cur = sel.value;
-  const bancos = [...new Set(contratos.map(c=>c.banco).filter(Boolean))].sort();
-  sel.innerHTML = '<option value="">Todos os bancos</option>'+bancos.map(b=>`<option value="${b}"${b===cur?' selected':''}>${b}</option>`).join('');
+function fillBancoSelect(){
+  const sel=document.getElementById('f-banco'),cur=sel.value;
+  const bs=[...new Set(contratos.map(c=>c.banco).filter(Boolean))].sort();
+  sel.innerHTML='<option value="">Todos os bancos</option>'+bs.map(b=>`<option value="${b}"${b===cur?' selected':''}>${b}</option>`).join('');
 }
 
-// ════════════════════════════════════
+// ══════════════════════════════════
 // CRUD CONTRATOS
-// ════════════════════════════════════
-function previewParcela() {
-  const fin = parseFloat(document.getElementById('c-fin').value)||0;
-  const n   = parseInt(document.getElementById('c-num').value)||0;
-  const el  = document.getElementById('c-parcela-preview');
-  el.textContent = fin>0&&n>0 ? brl(fin/n) : 'Automático';
+// ══════════════════════════════════
+function prevP(){
+  const f=parseFloat(document.getElementById('c-fin').value)||0;
+  const n=parseInt(document.getElementById('c-num').value)||0;
+  const el=document.getElementById('c-prev');
+  el.textContent=f>0&&n>0?brl(f/n):'Automático';
 }
 
-async function salvarContrato() {
-  const docId  = document.getElementById('c-doc-id').value;
-  const idC    = document.getElementById('c-id').value.trim();
-  const banco  = document.getElementById('c-banco').value.trim();
-  const dataS  = document.getElementById('c-data').value;
-  const primS  = document.getElementById('c-primeira').value;
-  const cheio  = parseFloat(document.getElementById('c-cheio').value);
-  const fin    = parseFloat(document.getElementById('c-fin').value);
-  const num    = parseInt(document.getElementById('c-num').value);
-  const ant    = parseInt(document.getElementById('c-ant').value)||0;
-  if (!idC||!banco||!dataS||!primS||!fin||!num) { toast('Preencha todos os campos obrigatórios (*)','⚠️'); return; }
-  if (ant>num) { toast('Antecipadas não pode ser maior que o total','⚠️'); return; }
-  const payload = {
-    idContrato:idC, banco,
-    descricao: document.getElementById('c-desc').value.trim(),
-    dataAquisicao: new Date(dataS+'T12:00:00'),
-    dataPrimeiraParcela: new Date(primS+'T12:00:00'),
-    valorCheio: cheio||fin, valorFinanciado:fin, numParcelas:num,
-    valorParcela: fin/num, parcelasAntecipadas:ant,
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+async function salvarContrato(){
+  const doc=document.getElementById('c-doc').value;
+  const id=document.getElementById('c-id').value.trim();
+  const banco=document.getElementById('c-banco').value.trim();
+  const dataS=document.getElementById('c-data').value;
+  const primS=document.getElementById('c-prim').value;
+  const cheio=parseFloat(document.getElementById('c-cheio').value);
+  const fin=parseFloat(document.getElementById('c-fin').value);
+  const num=parseInt(document.getElementById('c-num').value);
+  const ant=parseInt(document.getElementById('c-ant').value)||0;
+  if(!id||!banco||!dataS||!primS||!fin||!num){toast('Preencha todos os campos obrigatórios (*)','⚠️');return;}
+  if(ant>num){toast('Antecipadas não pode ser maior que o total','⚠️');return;}
+  const payload={
+    idContrato:id,banco,
+    descricao:document.getElementById('c-desc').value.trim(),
+    dataAquisicao:new Date(dataS+'T12:00:00'),
+    dataPrimeiraParcela:new Date(primS+'T12:00:00'),
+    valorCheio:cheio||fin,valorFinanciado:fin,numParcelas:num,
+    valorParcela:fin/num,parcelasAntecipadas:ant,
+    updatedAt:firebase.firestore.FieldValue.serverTimestamp()
   };
-  try {
-    if (docId) { await db.collection('contratos').doc(docId).update(payload); toast('Contrato atualizado!','✅'); }
-    else { payload.createdAt=firebase.firestore.FieldValue.serverTimestamp(); await db.collection('contratos').add(payload); toast('Contrato salvo!','✅'); }
-    closeModal('modal-contrato');
-  } catch(e) { toast('Erro: '+e.message,'❌'); }
+  try{
+    if(doc){await db.collection('contratos').doc(doc).update(payload);toast('Contrato atualizado!','✅');}
+    else{payload.createdAt=firebase.firestore.FieldValue.serverTimestamp();await db.collection('contratos').add(payload);toast('Contrato salvo!','✅');}
+    closeModal('modal-c');
+  }catch(e){toast('Erro: '+e.message,'❌');}
 }
 
-function editarContrato(id) {
-  const c = contratos.find(x=>x._id===id); if(!c) return;
-  document.getElementById('c-doc-id').value   = id;
-  document.getElementById('c-id').value       = c.idContrato||'';
-  document.getElementById('c-banco').value    = c.banco||'';
-  document.getElementById('c-desc').value     = c.descricao||'';
-  document.getElementById('c-data').value     = dtISO(c.dataAquisicao);
-  document.getElementById('c-primeira').value = dtISO(c.dataPrimeiraParcela||c.dataAquisicao);
-  document.getElementById('c-cheio').value    = c.valorCheio||'';
-  document.getElementById('c-fin').value      = c.valorFinanciado||'';
-  document.getElementById('c-num').value      = c.numParcelas||'';
-  document.getElementById('c-ant').value      = c.parcelasAntecipadas||0;
-  document.getElementById('modal-c-title').textContent = 'Editar Contrato';
-  previewParcela();
-  openModal('modal-contrato');
+function editC(id){
+  const c=contratos.find(x=>x._id===id);if(!c)return;
+  document.getElementById('c-doc').value=id;
+  document.getElementById('c-id').value=c.idContrato||'';
+  document.getElementById('c-banco').value=c.banco||'';
+  document.getElementById('c-desc').value=c.descricao||'';
+  document.getElementById('c-data').value=dtISO(c.dataAquisicao);
+  document.getElementById('c-prim').value=dtISO(c.dataPrimeiraParcela||c.dataAquisicao);
+  document.getElementById('c-cheio').value=c.valorCheio||'';
+  document.getElementById('c-fin').value=c.valorFinanciado||'';
+  document.getElementById('c-num').value=c.numParcelas||'';
+  document.getElementById('c-ant').value=c.parcelasAntecipadas||0;
+  document.getElementById('mc-title').textContent='Editar Contrato';
+  prevP();openModal('modal-c');
 }
 
-async function excluirContrato(id) {
-  if(!confirm('Excluir este contrato permanentemente?')) return;
-  try { await db.collection('contratos').doc(id).delete(); toast('Excluído','🗑️'); }
-  catch(e) { toast('Erro ao excluir','❌'); }
+async function delC(id){
+  if(!confirm('Excluir este contrato permanentemente?'))return;
+  try{await db.collection('contratos').doc(id).delete();toast('Excluído','🗑️');}
+  catch(e){toast('Erro','❌');}
 }
 
-function abrirAntecipar(id) {
-  const c = contratos.find(x=>x._id===id); if(!c) return;
-  document.getElementById('ant-id').value  = id;
-  document.getElementById('ant-val').value = c.parcelasAntecipadas||0;
-  document.getElementById('ant-info').textContent = `${c.banco} · ${c.numParcelas} parcelas no total`;
+function abrirAnt(id){
+  const c=contratos.find(x=>x._id===id);if(!c)return;
+  document.getElementById('ant-id').value=id;
+  document.getElementById('ant-val').value=c.parcelasAntecipadas||0;
+  document.getElementById('ant-info').textContent=`${c.banco} · ${c.numParcelas} parcelas no total`;
   openModal('modal-ant');
 }
 
-async function confirmarAntecipacao() {
-  const id  = document.getElementById('ant-id').value;
-  const val = parseInt(document.getElementById('ant-val').value)||0;
-  const c   = contratos.find(x=>x._id===id); if(!c) return;
-  if(val>c.numParcelas){ toast('Valor maior que o total de parcelas','⚠️'); return; }
-  try { await db.collection('contratos').doc(id).update({parcelasAntecipadas:val}); toast('Antecipação salva!','⚡'); closeModal('modal-ant'); }
-  catch(e) { toast('Erro','❌'); }
+async function confAnt(){
+  const id=document.getElementById('ant-id').value;
+  const val=parseInt(document.getElementById('ant-val').value)||0;
+  const c=contratos.find(x=>x._id===id);if(!c)return;
+  if(val>c.numParcelas){toast('Valor maior que o total de parcelas','⚠️');return;}
+  try{await db.collection('contratos').doc(id).update({parcelasAntecipadas:val});toast('Antecipação salva!','⚡');closeModal('modal-ant');}
+  catch(e){toast('Erro','❌');}
 }
 
-// ════════════════════════════════════
+// ══════════════════════════════════
 // CRUD SALÁRIO
-// ════════════════════════════════════
-async function salvarSalario() {
-  const mes = document.getElementById('sal-mes').value;
-  const val = parseFloat(document.getElementById('sal-val').value);
-  if(!mes||!val){ toast('Informe o mês e o valor','⚠️'); return; }
-  try {
-    await db.collection('salarios').doc(mes).set({mesAno:mes, previsao:val});
+// ══════════════════════════════════
+async function salvarSalario(){
+  const mes=document.getElementById('sal-mes').value;
+  const val=parseFloat(document.getElementById('sal-val').value);
+  if(!mes||!val){toast('Informe o mês e o valor','⚠️');return;}
+  try{
+    await db.collection('salarios').doc(mes).set({mesAno:mes,previsao:val});
     document.getElementById('sal-mes').value='';
     document.getElementById('sal-val').value='';
     toast('Salário salvo!','✅');
-  } catch(e){ toast('Erro','❌'); }
+  }catch(e){toast('Erro','❌');}
 }
 
-function abrirEditSalario(id) {
-  const s = salarios.find(x=>x._id===id); if(!s) return;
-  document.getElementById('sal-edit-id').value  = id;
-  document.getElementById('sal-edit-mes').value = s.mesAno;
-  document.getElementById('sal-edit-val').value = s.previsao;
-  openModal('modal-sal');
+function abrirEditSal(id){
+  const s=salarios.find(x=>x._id===id);if(!s)return;
+  document.getElementById('se-id').value=id;
+  document.getElementById('se-mes').value=s.mesAno;
+  document.getElementById('se-val').value=s.previsao;
+  openModal('modal-sal-ed');
 }
 
-async function confirmarEditSalario() {
-  const id  = document.getElementById('sal-edit-id').value;
-  const val = parseFloat(document.getElementById('sal-edit-val').value);
-  if(!val){ toast('Informe o valor','⚠️'); return; }
-  try {
-    await db.collection('salarios').doc(id).update({previsao:val});
-    toast('Salário atualizado!','✅');
-    closeModal('modal-sal');
-  } catch(e){ toast('Erro','❌'); }
+async function confEditSal(){
+  const id=document.getElementById('se-id').value;
+  const val=parseFloat(document.getElementById('se-val').value);
+  if(!val){toast('Informe o valor','⚠️');return;}
+  try{await db.collection('salarios').doc(id).update({previsao:val});toast('Salário atualizado!','✅');closeModal('modal-sal-ed');}
+  catch(e){toast('Erro','❌');}
 }
 
-async function excluirSalario(id) {
-  if(!confirm('Apagar este registro de salário?')) return;
-  try { await db.collection('salarios').doc(id).delete(); toast('Removido','🗑️'); }
-  catch(e){ toast('Erro','❌'); }
+async function delSal(id){
+  if(!confirm('Apagar este registro?'))return;
+  try{await db.collection('salarios').doc(id).delete();toast('Removido','🗑️');}
+  catch(e){toast('Erro','❌');}
 }
 
-// ════════════════════════════════════
-// UI HELPERS
-// ════════════════════════════════════
-const TABS = ['dashboard','contratos','parcelas','salario','quitados'];
-function showTab(t) {
-  TABS.forEach(x => { document.getElementById('page-'+x).classList.add('hidden'); document.getElementById('tab-'+x).classList.remove('active'); });
+// ══════════════════════════════════
+// UI
+// ══════════════════════════════════
+const TABS=['dash','contratos','parcelas','salario','quitados'];
+function showTab(t){
+  TABS.forEach(x=>{document.getElementById('page-'+x).classList.add('hidden');document.getElementById('tab-'+x).classList.remove('active');});
   document.getElementById('page-'+t).classList.remove('hidden');
   document.getElementById('tab-'+t).classList.add('active');
 }
-function openModal(id) {
-  document.getElementById(id).classList.remove('hidden');
-  document.getElementById(id).classList.add('flex');
-  document.body.style.overflow='hidden';
-}
-function closeModal(id) {
-  document.getElementById(id).classList.add('hidden');
-  document.getElementById(id).classList.remove('flex');
-  document.body.style.overflow='';
-  if(id==='modal-contrato'){
-    ['c-doc-id','c-id','c-banco','c-desc','c-data','c-primeira','c-cheio','c-fin','c-num'].forEach(f=>{ const e=document.getElementById(f); if(e) e.value=''; });
+function openModal(id){document.getElementById(id).classList.remove('hidden');document.getElementById(id).classList.add('flex');document.body.style.overflow='hidden';}
+function closeModal(id){
+  document.getElementById(id).classList.add('hidden');document.getElementById(id).classList.remove('flex');document.body.style.overflow='';
+  if(id==='modal-c'){
+    ['c-doc','c-id','c-banco','c-desc','c-data','c-prim','c-cheio','c-fin','c-num'].forEach(f=>{const e=document.getElementById(f);if(e)e.value='';});
     document.getElementById('c-ant').value='0';
-    document.getElementById('modal-c-title').textContent='Novo Contrato';
-    previewParcela();
+    document.getElementById('mc-title').textContent='Novo Contrato';
+    prevP();
   }
 }
-function limparFiltros() {
-  ['f-ini','f-fim','f-banco','f-status'].forEach(f=>document.getElementById(f).value='');
-  renderParcelas();
-}
+function limparFiltros(){['f-ini','f-fim','f-banco','f-status'].forEach(f=>document.getElementById(f).value='');renderParcelas();}
 let _tt;
-function toast(msg,icon='✅') {
+function toast(msg,icon='✅'){
   clearTimeout(_tt);
-  document.getElementById('toast-msg').textContent=msg;
-  document.getElementById('toast-icon').textContent=icon;
+  document.getElementById('t-msg').textContent=msg;
+  document.getElementById('t-icon').textContent=icon;
   const el=document.getElementById('toast');
-  el.classList.remove('hide'); el.classList.add('show');
+  el.classList.remove('hide');el.classList.add('show');
   _tt=setTimeout(()=>{el.classList.remove('show');el.classList.add('hide');},3500);
 }
 
-showTab('dashboard');
+showTab('dash');
 initApp();
 </script>
 </body>
